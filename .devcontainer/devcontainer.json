@@ -14,7 +14,7 @@
         "charliermarsh.ruff"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
         "python.testing.pytestEnabled": true,
         "python.testing.pytestArgs": [
           "tests"

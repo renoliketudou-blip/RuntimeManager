@@ -3,7 +3,7 @@ name = "runtime-manager"
 version = "0.1.0"
 description = "Contract-first runtime manager for OpenClaw containers."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
   "pydantic>=2.11.0",
 ]
@@ -20,7 +20,7 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
