@@ -5,11 +5,16 @@ description = "Contract-first runtime manager for OpenClaw containers."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "docker>=7.1.0",
+  "fastapi>=0.116.0",
   "pydantic>=2.11.0",
+  "pydantic-settings>=2.10.0",
+  "uvicorn>=0.35.0",
 ]
 
 [dependency-groups]
 dev = [
+  "httpx>=0.28.0",
   "pytest>=8.3.0",
   "ruff>=0.11.0",
 ]
@@ -24,3 +29,6 @@ target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "integration: tests that require Docker and real containers",
+]

@@ -37,3 +37,31 @@ def test_ensure_running_request_schema() -> None:
     )
     assert req.runtime_id == "rt_001"
 
+
+def test_ensure_running_request_accepts_camel_case_payload() -> None:
+    req = EnsureRunningRequest.model_validate(
+        {
+            "userId": "u_001",
+            "runtimeId": "rt_001",
+            "imageRef": "ghcr.io/openclaw/openclaw@sha256:123",
+            "volumeId": "vol_001",
+            "routeHost": "u-001.crewclaw.example.com",
+            "configMount": {
+                "configFilePath": "/var/lib/crewclaw/runtime-configs/u_001/openclaw.json",
+                "secretFilePath": "/var/lib/crewclaw/runtime-secrets/u_001/gateway.token",
+            },
+            "retentionPolicy": "preserve_workspace",
+            "compat": {
+                "openclawConfigDir": "/var/lib/crewclaw/users/u_001/config",
+                "openclawWorkspaceDir": "/var/lib/crewclaw/users/u_001/workspace",
+                "networkName": "crewclaw_shared",
+                "gatewayPort": 18789,
+                "bridgePort": 18790,
+            },
+        }
+    )
+
+    payload = req.model_dump(by_alias=True)
+    assert payload["userId"] == "u_001"
+    assert payload["configMount"]["configFilePath"].endswith("openclaw.json")
+
