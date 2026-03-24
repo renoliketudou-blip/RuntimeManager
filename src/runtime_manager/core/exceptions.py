@@ -18,11 +18,36 @@ class RuntimeValidationError(RuntimeManagerError):
 
 
 class DockerRuntimeError(RuntimeManagerError):
-    code = "RUNTIME_MANAGER_ERROR"
+    code = "RUNTIME_START_FAILED"
     status_code = 500
 
 
 class RuntimeEnvironmentError(RuntimeManagerError):
     code = "RUNTIME_MANAGER_ENVIRONMENT_ERROR"
     status_code = 503
+
+
+class RuntimeContractDriftError(RuntimeManagerError):
+    code = "RUNTIME_CONTRACT_DRIFT"
+    status_code = 409
+
+
+class RuntimeActionConflictError(RuntimeManagerError):
+    code = "RUNTIME_ACTION_CONFLICT"
+    status_code = 409
+
+
+class RuntimeStartFailedError(RuntimeManagerError):
+    code = "RUNTIME_START_FAILED"
+    status_code = 500
+
+
+class RuntimeStopFailedError(RuntimeManagerError):
+    code = "RUNTIME_STOP_FAILED"
+    status_code = 500
+
+
+class RuntimeDeleteFailedError(RuntimeManagerError):
+    code = "RUNTIME_DELETE_FAILED"
+    status_code = 500
 

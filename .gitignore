@@ -1,6 +1,6 @@
 ./docker_test/*
 RuntimeManager 开发契约.md
-docker_test/
+docker_test/*
 .idea/
 
 __pycache__/

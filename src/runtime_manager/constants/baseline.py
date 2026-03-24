@@ -3,7 +3,7 @@ DEFAULT_IMAGE_REF = (
 )
 INIT_PERMISSIONS_IMAGE = "busybox:latest"
 PROBE_IMAGE = "busybox:latest"
-DEFAULT_NETWORK_NAME = "crewclaw_shared"
+DEFAULT_NETWORK_NAME = "clawloops_shared"
 DEFAULT_GATEWAY_PORT = 18789
 DEFAULT_BRIDGE_PORT = 18790
 CONTAINER_GATEWAY_PORT = 18789
@@ -13,7 +13,7 @@ OPENCLAW_WORKSPACE_DIR = "/home/node/.openclaw/workspace"
 OPENCLAW_CANVAS_DIR = "/home/node/.openclaw/canvas"
 OPENCLAW_CRON_DIR = "/home/node/.openclaw/cron"
 OPENCLAW_CONFIG_PATH = "/home/node/.openclaw/openclaw.json"
-OPENCLAW_SECRET_PATH = "/run/crewclaw/gateway.token"
+OPENCLAW_SECRET_PATH = "/run/clawloops/secrets/gateway.token"
 START_COMMAND = ("node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789")
 
 REQUIRED_ENV_KEYS = (
@@ -32,13 +32,13 @@ OPTIONAL_ENV_KEYS = (
 )
 
 LABEL_KEYS = (
-    "crewclaw.managed",
-    "crewclaw.userId",
-    "crewclaw.runtimeId",
-    "crewclaw.volumeId",
-    "crewclaw.routeHost",
-    "crewclaw.retentionPolicy",
-    "crewclaw.configDir",
-    "crewclaw.workspaceDir",
+    "clawloops.managed",
+    "clawloops.userId",
+    "clawloops.runtimeId",
+    "clawloops.volumeId",
+    "clawloops.routeHost",
+    "clawloops.retentionPolicy",
+    "clawloops.configDir",
+    "clawloops.workspaceDir",
 )
 

@@ -17,9 +17,8 @@ def make_request() -> EnsureRunningRequest:
         {
             "userId": "u_001",
             "runtimeId": "rt_001",
-            "imageRef": "ghcr.io/openclaw/openclaw@sha256:test",
             "volumeId": "vol_001",
-            "routeHost": "u-001.crewclaw.example.com",
+            "routeHost": "u-001.clawloops.example.com",
             "configMount": {
                 "configFilePath": "/tmp/openclaw.json",
                 "secretFilePath": "/tmp/gateway.token",
@@ -28,10 +27,8 @@ def make_request() -> EnsureRunningRequest:
             "compat": {
                 "openclawConfigDir": "/tmp/config",
                 "openclawWorkspaceDir": "/tmp/workspace",
-                "networkName": "crewclaw_shared",
-                "gatewayPort": 18789,
-                "bridgePort": 18790,
             },
+            "env": {"OPENCLAW_GATEWAY_TOKEN": "token-123"},
         }
     )
 
@@ -151,7 +148,22 @@ def test_ensure_running_creates_container_when_missing() -> None:
 
 
 def test_ensure_running_is_idempotent_when_already_running() -> None:
-    container = FakeContainer(name="crewclaw-rt-u-001-rt-001", status="running")
+    container = FakeContainer(
+        name="rt-rt_001",
+        status="running",
+        labels={
+            "clawloops.managed": "true",
+            "clawloops.userId": "u_001",
+            "clawloops.runtimeId": "rt_001",
+            "clawloops.volumeId": "vol_001",
+            "clawloops.routeHost": "u-001.clawloops.example.com",
+            "clawloops.retentionPolicy": "preserve_workspace",
+            "clawloops.configDir": "/tmp/config",
+            "clawloops.workspaceDir": "/tmp/workspace",
+        },
+    )
+    container.attrs["Config"] = {"Cmd": ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]}
+    container.attrs["HostConfig"] = {"NetworkMode": "clawloops_shared"}
     docker_client = FakeDockerClient(container=container)
     service = make_service(
         docker_client=docker_client,
@@ -180,10 +192,10 @@ def test_stop_returns_already_stopped_when_container_missing() -> None:
 
 def test_delete_wipes_workspace_when_requested() -> None:
     labels = {
-        "crewclaw.configDir": "/tmp/config",
-        "crewclaw.workspaceDir": "/tmp/workspace",
+        "clawloops.configDir": "/tmp/config",
+        "clawloops.workspaceDir": "/tmp/workspace",
     }
-    container = FakeContainer(name="crewclaw-rt-u-001-rt-001", status="exited", labels=labels)
+    container = FakeContainer(name="rt-rt_001", status="exited", labels=labels)
     docker_client = FakeDockerClient(container=container)
     path_manager = FakePathManager()
     service = make_service(

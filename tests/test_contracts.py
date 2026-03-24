@@ -1,41 +1,41 @@
 import pytest
 from pydantic import ValidationError
 
-from contracts import CompatConfig, EnsureRunningRequest, RetentionPolicy
+from contracts import EnsureRunningRequest, ObservedState, RetentionPolicy, RuntimeStatusResponse
 
 
-def test_compat_config_rejects_invalid_port() -> None:
-    with pytest.raises(ValidationError):
-        CompatConfig(
-            openclaw_config_dir="/var/lib/crewclaw/users/u_001/config",
-            openclaw_workspace_dir="/var/lib/crewclaw/users/u_001/workspace",
-            network_name="crewclaw_shared",
-            gateway_port=0,
-            bridge_port=18790,
-        )
-
-
-def test_ensure_running_request_schema() -> None:
+def test_ensure_running_request_schema_v2() -> None:
     req = EnsureRunningRequest(
         user_id="u_001",
         runtime_id="rt_001",
-        image_ref="ghcr.io/openclaw/openclaw@sha256:123",
         volume_id="vol_001",
-        route_host="u-001.crewclaw.example.com",
-        config_mount={
-            "config_file_path": "/var/lib/crewclaw/runtime-configs/u_001/openclaw.json",
-            "secret_file_path": "/var/lib/crewclaw/runtime-secrets/u_001/gateway.token",
-        },
+        route_host="u-001.clawloops.example.com",
         retention_policy=RetentionPolicy.PRESERVE_WORKSPACE,
         compat={
-            "openclaw_config_dir": "/var/lib/crewclaw/users/u_001/config",
-            "openclaw_workspace_dir": "/var/lib/crewclaw/users/u_001/workspace",
-            "network_name": "crewclaw_shared",
-            "gateway_port": 18789,
-            "bridge_port": 18790,
+            "openclaw_config_dir": "/var/lib/clawloops/users/u_001/config",
+            "openclaw_workspace_dir": "/var/lib/clawloops/users/u_001/workspace",
         },
+        env={"OPENCLAW_GATEWAY_TOKEN": "token"},
     )
     assert req.runtime_id == "rt_001"
+
+
+def test_ensure_running_request_rejects_removed_fields() -> None:
+    with pytest.raises(ValidationError):
+        EnsureRunningRequest.model_validate(
+            {
+                "userId": "u_001",
+                "runtimeId": "rt_001",
+                "imageRef": "ghcr.io/openclaw/openclaw@sha256:123",
+                "volumeId": "vol_001",
+                "routeHost": "u-001.clawloops.example.com",
+                "retentionPolicy": "preserve_workspace",
+                "compat": {
+                    "openclawConfigDir": "/var/lib/clawloops/users/u_001/config",
+                    "openclawWorkspaceDir": "/var/lib/clawloops/users/u_001/workspace",
+                },
+            }
+        )
 
 
 def test_ensure_running_request_accepts_camel_case_payload() -> None:
@@ -43,25 +43,33 @@ def test_ensure_running_request_accepts_camel_case_payload() -> None:
         {
             "userId": "u_001",
             "runtimeId": "rt_001",
-            "imageRef": "ghcr.io/openclaw/openclaw@sha256:123",
             "volumeId": "vol_001",
-            "routeHost": "u-001.crewclaw.example.com",
+            "routeHost": "u-001.clawloops.example.com",
             "configMount": {
-                "configFilePath": "/var/lib/crewclaw/runtime-configs/u_001/openclaw.json",
-                "secretFilePath": "/var/lib/crewclaw/runtime-secrets/u_001/gateway.token",
+                "configFilePath": "/var/lib/clawloops/runtime-configs/u_001/openclaw.json",
+                "secretFilePath": "/var/lib/clawloops/runtime-secrets/u_001/gateway.token",
             },
             "retentionPolicy": "preserve_workspace",
             "compat": {
-                "openclawConfigDir": "/var/lib/crewclaw/users/u_001/config",
-                "openclawWorkspaceDir": "/var/lib/crewclaw/users/u_001/workspace",
-                "networkName": "crewclaw_shared",
-                "gatewayPort": 18789,
-                "bridgePort": 18790,
+                "openclawConfigDir": "/var/lib/clawloops/users/u_001/config",
+                "openclawWorkspaceDir": "/var/lib/clawloops/users/u_001/workspace",
             },
+            "envOverrides": {"OPENCLAW_ALLOW_INSECURE_PRIVATE_WS": "true"},
         }
     )
 
     payload = req.model_dump(by_alias=True)
     assert payload["userId"] == "u_001"
     assert payload["configMount"]["configFilePath"].endswith("openclaw.json")
+    assert payload["compat"]["openclawConfigDir"].endswith("/config")
+
+
+def test_runtime_status_response_allows_null_endpoint_for_deleted() -> None:
+    payload = RuntimeStatusResponse(
+        runtime_id="rt_001",
+        observed_state=ObservedState.DELETED,
+        internal_endpoint=None,
+        message="not found as container fact",
+    ).model_dump(by_alias=True)
+    assert payload["internalEndpoint"] is None
 

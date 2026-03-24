@@ -12,9 +12,6 @@ from contracts import (
 )
 from runtime_manager.api.dependencies import get_runtime_manager_service
 from runtime_manager.app import create_app
-from runtime_manager.core.exceptions import RuntimeNotFoundError
-
-
 class FakeRuntimeManagerService:
     def is_ready(self) -> bool:
         return True
@@ -23,7 +20,7 @@ class FakeRuntimeManagerService:
         return EnsureRunningResponse(
             runtime_id=request.runtime_id,
             observed_state=ObservedState.RUNNING,
-            internal_endpoint="http://crewclaw-rt-u-001-rt-001:18789",
+            internal_endpoint="http://rt-rt_001:18789",
             message="already running",
         )
 
@@ -35,11 +32,16 @@ class FakeRuntimeManagerService:
 
     def get_status(self, runtime_id: str) -> RuntimeStatusResponse:
         if runtime_id == "missing":
-            raise RuntimeNotFoundError("runtime not found")
+            return RuntimeStatusResponse(
+                runtime_id=runtime_id,
+                observed_state=ObservedState.DELETED,
+                internal_endpoint=None,
+                message="not found as container fact",
+            )
         return RuntimeStatusResponse(
             runtime_id=runtime_id,
             observed_state=ObservedState.RUNNING,
-            internal_endpoint="http://crewclaw-rt-u-001-rt-001:18789",
+            internal_endpoint="http://rt-rt_001:18789",
             message="ok",
         )
 
@@ -58,9 +60,8 @@ def test_ensure_running_endpoint_uses_camel_case() -> None:
         json={
             "userId": "u_001",
             "runtimeId": "rt_001",
-            "imageRef": "ghcr.io/openclaw/openclaw@sha256:123",
             "volumeId": "vol_001",
-            "routeHost": "u-001.crewclaw.example.com",
+            "routeHost": "u-001.clawloops.example.com",
             "configMount": {
                 "configFilePath": "/tmp/openclaw.json",
                 "secretFilePath": "/tmp/gateway.token",
@@ -69,9 +70,6 @@ def test_ensure_running_endpoint_uses_camel_case() -> None:
             "compat": {
                 "openclawConfigDir": "/tmp/config",
                 "openclawWorkspaceDir": "/tmp/workspace",
-                "networkName": "crewclaw_shared",
-                "gatewayPort": 18789,
-                "bridgePort": 18790,
             },
         },
     )
@@ -79,18 +77,20 @@ def test_ensure_running_endpoint_uses_camel_case() -> None:
     body = response.json()
     assert response.status_code == 200
     assert body["runtimeId"] == "rt_001"
-    assert body["internalEndpoint"] == "http://crewclaw-rt-u-001-rt-001:18789/"
+    assert body["internalEndpoint"] == "http://rt-rt_001:18789"
 
 
-def test_get_status_returns_not_found_error_payload() -> None:
+def test_get_status_returns_deleted_payload_when_missing() -> None:
     client = make_client()
 
     response = client.get("/internal/runtime-manager/containers/missing")
 
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "RUNTIME_NOT_FOUND",
-        "message": "runtime not found",
+        "runtimeId": "missing",
+        "observedState": "deleted",
+        "internalEndpoint": None,
+        "message": "not found as container fact",
     }
 
 

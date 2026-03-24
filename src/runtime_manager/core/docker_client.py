@@ -6,7 +6,7 @@ import docker
 from docker.errors import APIError, ContainerError, DockerException, ImageNotFound, NotFound
 from docker.models.containers import Container
 
-from runtime_manager.core.exceptions import DockerRuntimeError, RuntimeEnvironmentError
+from runtime_manager.core.exceptions import DockerRuntimeError, RuntimeActionConflictError, RuntimeEnvironmentError
 from runtime_manager.core.specs import RuntimeContainerSpec
 from runtime_manager.settings import RuntimeManagerSettings
 
@@ -43,6 +43,10 @@ class DockerRuntimeClient:
 
         if not containers:
             return None
+        if len(containers) > 1:
+            raise RuntimeActionConflictError(
+                f"multiple managed containers matched runtimeId={runtime_id}"
+            )
 
         containers.sort(key=lambda container: container.attrs["Created"])
         return containers[-1]
@@ -163,11 +167,11 @@ class DockerRuntimeClient:
     @staticmethod
     def _build_label_filters(runtime_id: str, user_id: str | None) -> list[str]:
         filters = [
-            "crewclaw.managed=true",
-            f"crewclaw.runtimeId={runtime_id}",
+            "clawloops.managed=true",
+            f"clawloops.runtimeId={runtime_id}",
         ]
         if user_id is not None:
-            filters.append(f"crewclaw.userId={user_id}")
+            filters.append(f"clawloops.userId={user_id}")
         return filters
 
     @staticmethod
